@@ -1,0 +1,28 @@
+MODEL:
+  META_ARCHITECTURE: "GeneralizedRCNN"
+  WEIGHT: "catalog://ImageNetPretrained/MSRA/R-50"
+  RPN_ONLY: True
+  RPN:
+    PRE_NMS_TOP_N_TEST: 12000
+    POST_NMS_TOP_N_TEST: 2000
+DATASETS:
+  TRAIN: ("coco_zeroshot_train",)
+  TEST: ("coco_not_zeroshot_val", "coco_zeroshot_val", "coco_generalized_zeroshot_val")
+  DATASET_CLASS: "COCODataset"
+  DATASET_ARGS: 
+    # load embeddings from the annotation json. Note it doesn't work with original COCO json.
+    # First run ipynb/003.ipynb or ipynb/004.ipynb to add embeddings to annotations
+    LOAD_EMBEDDINGS: False
+DATALOADER:
+  SIZE_DIVISIBILITY: 32
+SOLVER:
+  BASE_LR: 0.06
+  WEIGHT_DECAY: 0.0001
+  STEPS: (20000, 26000)
+  MAX_ITER: 30000
+  IMS_PER_BATCH: 6
+  CHECKPOINT_PERIOD: 10000
+  TEST_PERIOD: 10000
+  LOG_PERIOD: 100
+TEST:
+  IMS_PER_BATCH: 3

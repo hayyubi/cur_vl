@@ -1,0 +1,46 @@
+MODEL:
+  # This is what indicates we want image-caption training not object detection
+  META_ARCHITECTURE: "MMSS-RCNN"
+  # URL to the initial weights, trained for imagenet classification
+  WEIGHT: "catalog://ImageNetPretrained/MSRA/R-50"
+  # Trim the prefix of the checkpoint parameter names so they can be correctly loaded
+  # The model should load correctly irrespective of mmss_heads used while training
+  BACKBONE_PREFIX: "mmss_heads."
+  # Whichever backbone the model has been trained with
+  LANGUAGE_BACKBONE:
+    # make a BERT model to process captions
+    # Same as what the model was trained with
+    TYPE: "BERT-Base"
+    # Emedding Path to load from
+    EMBEDDING_PATH: "datasets/coco/zero-shot/glove.6B.300d.txt"
+    # Determines whether language backbone is loaded from a pretrained model
+    # If not using pretrained, then unfreeze  
+    # Same as what the model was trained with
+    USE_PRETRAINED: True
+    # This parameter determines whether cls score embeddings are loaded
+    # from language backbone or pretrained
+    # True: Pretrained Embeddings
+    # False: trainable embeddings from language backbone
+    # Same as what the model was trained with
+    FREEZE: True
+DATASETS:
+  TEST: ("coco_cap_det_val", ) #"visual_genome_filtered")
+  DATASET_ARGS: 
+    # This should be the same as what the model was trained with
+    # If false, then embedding from language backbone is loaded
+    # It must be true if MODEL.LANGUAGE_BACKBONE.FREEZE = True
+    LOAD_EMBEDDINGS: True
+    # The key for embedding to load. We have BertEmb and GloVE for now.
+    # Same as what the model was trained with
+    EMB_KEY: "BertEmb"
+    # Dimension of embeddings (300 for Glove, 768 for Bert)
+    # Same as the model was trained with
+    EMB_DIM: 768
+    # Dataset number of those which ask model to classify whole image
+    # instead of BBoxes
+    INFERENCE_FROM_IMAGE: []
+TEST:
+  IMS_PER_BATCH: 16
+  PHASED_INFERENCE: False
+INFERENCE:
+  DO: True
