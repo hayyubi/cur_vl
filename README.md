@@ -1,49 +1,33 @@
-# Open Vocabulary Object Detection
+# Learning from Children: Improving Image-Caption Pretraining via Curriculum
 
-This repository provides an implementation of image-caption pretraining and object detection fine-tuning to build an open-vocabulary object detector. The code is built on top of Facebook's [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark). We have also partially used some code from Facebook's [ViLbert](https://github.com/facebookresearch/vilbert-multi-task) and HuggingFace's [transformers](https://github.com/huggingface/transformers). We appreciate the work of everyone involved in those invaluable projects.
+This repository provides the official implementation of our ACL 2023 Findings paper titled, Learning from Children: Improving Image-Caption Pretraining via Curriculum. The code is built on top of [Open Vocabulary Object Detection](https://github.com/alirezazareian/ovr-cnn). We appreciate the work of the authors in this valuable project.
 
-![alt text](demo/demo_e2e_mask_rcnn_X_101_32x8d_FPN_1x.png "from http://cocodataset.org/#explore?id=345434")
-
-## Jupyter notebook demo
-
-We provide a simple demo that creates a side-by-side video of a regular Faster R-CNN vs. our open-vocabulary detector. To run, just open any of the notebooks inside the [`demo`](demo) folder.
+![alt text](demo/acl2023_main.png)
 
 ## Installation
 
-Check [INSTALL.md](INSTALL.md) for installation instructions. For the demo to create the video output, it might be necessary to build OpenCV from source instead of installing using pip.
+Create environment and set up data as instructed in this [repo](https://github.com/alirezazareian/ovr-cnn); with this exception -- install PyTorch version 1.2.0 instead of PyTorch 1.0 nightly. 
 
-## Model Zoo and Baselines
+### Generating Curriculum Data
+Generate curriculum data by running this [notebook](ipynb/coco_img_cap_dataset_divide_into_phases.ipynb).
 
-Pre-trained models, baselines and comparison with Detectron and mmdetection
-can be found in [MODEL_ZOO.md](MODEL_ZOO.md)
+## Do image-caption pretraining on COCO captions dataset via curriculum
 
-## Perform multimedia self-supervised pre-training on COCO captions dataset
-
-For the following examples to work, you need to download the COCO dataset.
-We recommend to symlink the path to the coco dataset to [`datasets/`](datasets). Refer to [`path_catalog.py`](maskrcnn_benchmark/config/path_catalog.py) for the names of the required files. After setting up the dataset, run:
-
+For 4 gpus:
 ```bash
-python -m torch.distributed.launch --nproc_per_node=8 tools/train_net.py --config-file configs/mmss_v07.yaml --skip-test OUTPUT_DIR ~/runs/vltrain/121
+python -m torch.distributed.launch --nproc_per_node=4 --master_port 6254 tools/train_net.py --skip-test --config-file configs/mmss_rcnn_v01_4x_cur_rs.yaml OUTPUT_DIR runs/
 ```
 
-## Perform fine-tuning (or training from scratch) on COCO object detection dataset
+## Train baseline for the same config
+Run the above command with the following changes in configs/mmss_rcnn_v01_4x_cur_rs.yaml:
+- CURRICULUM.DO = False
+- Comment out MODEL.MMSS_HEAD.GROUNDING.ALIGNMENT_CURRICULUM
 
-For the zero-shot experiment to work, you need to first create a new annotation json using [this notebook](ipynb/003.ipynb). Then run:
-
-```bash
-python -m torch.distributed.launch --nproc_per_node=8 tools/train_net.py --config-file configs/zeroshot_v06.yaml OUTPUT_DIR ~/runs/maskrcnn/130
-```
 
 ## Evaluation
-You can evaluate using a similar command as above, by running [`tools/test_net.py`](tools/test_net.py) and providing the right checkpoint path to `MODEL.WEIGHT`
+You can evaluate using a similar command as above, by running [`tools/test_net.py`](tools/test_net.py).
 
 
 ## License
 
 This repository is released under the MIT license. See [LICENSE](LICENSE) for additional details.
-
-## Additional Notes
-
-We did not test all the functionality of `maskrcnn_benchmark` under the zero-shot settings, such as instance segmentation, or feature pyramid network. Anything besides the provided config files may not work.
-
-Created and maintained by [Alireza Zareian](https://www.linkedin.com/in/az2407).
